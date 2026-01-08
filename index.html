@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battle Royale Arena</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial Black', Arial, sans-serif;
+      overflow: hidden;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Menu Screen */
+    #menuScreen {
+      flex-direction: row;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #menuScreen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="none"/><path d="M0 0 L100 100 M100 0 L0 100" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></svg>');
+      opacity: 0.5;
+    }
+
+    .menu-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .menu-header {
+      margin-bottom: 30px;
+    }
+
+    .menu-title {
+      font-size: 48px;
+      color: #00d4ff;
+      text-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 3px 3px 6px rgba(0,0,0,0.8);
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-weight: 900;
+    }
+
+    .menu-subtitle {
+      font-size: 18px;
+      color: #a0a0a0;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .mode-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .mode-section::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .mode-section::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+
+    .mode-section::-webkit-scrollbar-thumb {
+      background: #00d4ff;
+      border-radius: 4px;
+    }
+
+    .mode-btn {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+      border: 2px solid rgba(0, 212, 255, 0.3);
+      padding: 20px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .mode-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .mode-btn:hover::before {
+      left: 100%;
+    }
+
+    .mode-btn:hover {
+      border-color: #00d4ff;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%);
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+      transform: translateX(10px);
+    }
+
+    .mode-btn:active {
+      transform: translateX(5px) scale(0.98);
+    }
+
+    .mode-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+    }
+
+    .menu-right {
+      width: 400px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(138, 43, 226, 0.05) 100%);
+      border-left: 2px solid rgba(0, 212, 255, 0.2);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    .skin-selector {
+      margin-bottom: 30px;
+    }
+
+    .skin-title {
+      font-size: 24px;
+      color: #00d4ff;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
+    .skin-preview {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+      border: 3px solid rgba(0, 212, 255, 0.3);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: skinGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes skinGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
+    }
+
+    .skin-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .skin-option {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .skin-option:hover {
+      background: rgba(0, 212, 255, 0.2);
+      border-color: #00d4ff;
+      transform: scale(1.1);
+    }
+
+    .skin-option.selected {
+      background: rgba(0, 212, 255, 0.3);
+      border-color: #00d4ff;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+    }
+
+    .stats-panel {
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      font-size: 16px;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #a0a0a0;
+    }
+
+    .stat-value {
+      color: #00d4ff;
+      font-weight: bold;
+    }
+
+    /* Game Screen */
+    #gameScreen {
+      flex-direction: column;
+      background: linear-gradient(180deg, #87CEEB 0%, #90EE90 100%);
+    }
+
+    .game-header {
+      background: rgba(0,0,0,0.7);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .stats {
+      display: flex;
+      gap: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn {
+      background: #ff4757;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .back-btn:hover {
+      background: #ff3838;
+    }
+
+    .game-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .player {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: #4CAF50;
+      border-radius: 50%;
+      border: 3px solid #2E7D32;
+      transition: all 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .enemy {
+      position: absolute;
+      width: 35px;
+      height: 35px;
+      background: #f44336;
+      border-radius: 50%;
+      border: 3px solid #c62828;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .boss {
+      width: 80px !important;
+      height: 80px !important;
+      font-size: 50px !important;
+      background: linear-gradient(135deg, #8B0000 0%, #FF0000 100%) !important;
+      border: 5px solid #FFD700 !important;
+      animation: bossShake 0.5s ease-in-out infinite;
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.8) !important;
+    }
+
+    @keyframes bossShake {
+      0%, 100% { transform: rotate(-2deg); }
+      50% { transform: rotate(2deg); }
+    }
+
+    .zombie {
+      background: #4a5568 !important;
+      border-color: #2d3748 !important;
+      animation: zombieWalk 1s ease-in-out infinite;
+    }
+
+    @keyframes zombieWalk {
+      0%, 100% { transform: translateX(-2px); }
+      50% { transform: translateX(2px); }
+    }
+
+    .health-bar {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 6px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .health-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0000 0%, #00ff00 100%);
+      transition: width 0.2s;
+    }
+
+    .bullet {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #FFC107;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #FFC107;
+    }
+
+    .loot {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #9C27B0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      animation: float 2s ease-in-out infinite;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .zone {
+      position: absolute;
+      border: 4px dashed #ff4757;
+      border-radius: 50%;
+      pointer-events: none;
+      transition: all 2s linear;
+      box-shadow: inset 0 0 50px rgba(255, 71, 87, 0.3);
+    }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 50px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      display: none;
+    }
+
+    .game-over.show {
+      display: block;
+    }
+
+    .game-over h2 {
+      font-size: 48px;
+      margin: 0 0 20px 0;
+      color: #FFD700;
+    }
+
+    .game-over p {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border: none;
+      padding: 15px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .restart-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      padding: 15px 30px;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+    }
+
+    .explosion {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff6b00 0%, #ff0000 50%, transparent 100%);
+      animation: explode 0.5s ease-out forwards;
+      pointer-events: none;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes explode {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    .powerup {
+      position: absolute;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      animation: pulse 1s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .combo-display {
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      font-weight: bold;
+      color: #FFD700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+      animation: comboAnim 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes comboAnim {
+      0% { transform: translateX(-50%) scale(0); }
+      50% { transform: translateX(-50%) scale(1.3); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+
+    .damage-number {
+      position: absolute;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff0000;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      animation: floatUp 1s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+
+    .shield-effect {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 3px solid #00ffff;
+      border-radius: 50%;
+      animation: shieldPulse 1s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shieldPulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+    }
+
+    .speed-trail {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: rgba(76, 175, 80, 0.3);
+      border-radius: 50%;
+      animation: fadeTrail 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes fadeTrail {
+      0% { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.5); }
+    }
+
+    .rapid-fire {
+      box-shadow: 0 0 20px #FFC107 !important;
+      animation: rapidGlow 0.3s ease-in-out infinite;
+    }
+
+    @keyframes rapidGlow {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.5); }
+    }
+
+    .sniper-scope {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border: 3px solid rgba(255, 0, 0, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      display: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+    }
+
+    .sniper-scope::before,
+    .sniper-scope::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 0, 0, 0.5);
+    }
+
+    .sniper-scope::before {
+      width: 2px;
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .sniper-scope::after {
+      height: 2px;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .sniper-mode .sniper-scope {
+      display: block;
+    }
+
+    .wave-indicator {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      padding: 15px 30px;
+      border-radius: 10px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      animation: waveAnim 0.5s ease-out;
+    }
+
+    @keyframes waveAnim {
+      0% { transform: translateX(-50%) scale(0); }
+      50% { transform: translateX(-50%) scale(1.2); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- Menu Screen -->
+  <div id="menuScreen" class="screen active">
+   <div class="menu-left">
+    <div class="menu-header">
+     <h1 class="menu-title" id="gameTitle">Battle Royale Arena</h1>
+     <p class="menu-subtitle" id="menuSubtitle">Choose Your Mode</p>
+    </div>
+    <div class="mode-section"><button class="mode-btn" onclick="startGame('solo')"> <span class="mode-icon">🎯</span> <span>Solo Battle Royale</span> </button> <button class="mode-btn" onclick="startGame('survival')"> <span class="mode-icon">⚔️</span> <span>Survival Mode</span> </button> <button class="mode-btn" onclick="startGame('loot')"> <span class="mode-icon">💎</span> <span>Loot Rush</span> </button> <button class="mode-btn" onclick="startGame('boss')"> <span class="mode-icon">👹</span> <span>Boss Battle</span> </button> <button class="mode-btn" onclick="startGame('zombie')"> <span class="mode-icon">🧟</span> <span>Zombie Horde</span> </button> <button class="mode-btn" onclick="startGame('sniper')"> <span class="mode-icon">🎯</span> <span>Sniper Elite</span> </button> <button class="mode-btn" onclick="startGame('deathmatch')"> <span class="mode-icon">💥</span> <span>Team Deathmatch</span> </button> <button class="mode-btn" onclick="startGame('capture')"> <span class="mode-icon">🚩</span> <span>Capture The Flag</span> </button> <button class="mode-btn" onclick="startGame('infection')"> <span class="mode-icon">🦠</span> <span>Infection</span> </button>
+    </div>
+   </div>
+   <div class="menu-right">
+    <div class="skin-selector">
+     <h2 class="skin-title">Select Skin</h2>
+     <div class="skin-preview" id="skinPreview">
+      😎
+     </div>
+     <div class="skin-grid" id="skinGrid"></div>
+    </div>
+    <div class="stats-panel">
+     <div class="stat-row"><span class="stat-label">Total Wins</span> <span class="stat-value" id="totalWins">0</span>
+     </div>
+     <div class="stat-row"><span class="stat-label">Total Kills</span> <span class="stat-value" id="totalKills">0</span>
+     </div>
+     <div class="stat-row"><span class="stat-label">Games Played</span> <span class="stat-value" id="gamesPlayed">0</span>
+     </div>
+     <div class="stat-row"><span class="stat-label">Win Rate</span> <span class="stat-value" id="winRate">0%</span>
+     </div>
+    </div>
+   </div>
+  </div><!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+   <div class="game-header">
+    <div class="stats">
+     <div class="stat-item"><span>❤️ Health:</span> <span id="health">100</span>
+     </div>
+     <div class="stat-item"><span>💀 Eliminations:</span> <span id="kills">0</span>
+     </div>
+     <div class="stat-item"><span>👥 Alive:</span> <span id="alive">20</span>
+     </div>
+     <div class="stat-item"><span>💎 Loot:</span> <span id="loot">0</span>
+     </div>
+    </div><button class="back-btn" onclick="backToMenu()">← Menu</button>
+   </div>
+   <div class="game-area" id="gameArea">
+    <div class="zone" id="zone"></div>
+    <div class="sniper-scope" id="sniperScope"></div>
+    <div class="controls-hint">
+     WASD to Move • Click to Shoot • Collect 💎 Loot &amp; 🛡️⚡🔥 Power-ups!
+    </div>
+   </div>
+   <div class="game-over" id="gameOver">
+    <h2 id="resultTitle">Victory Royale!</h2>
+    <p id="resultStats"></p><button class="restart-btn" onclick="restartGame()">Play Again</button> <button class="restart-btn" onclick="backToMenu()">Main Menu</button>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "Battle Royale Arena",
+      menu_subtitle: "Choose Your Mode"
+    };
+
+    let config = { ...defaultConfig };
+
+    // Available skins
+    const skins = ['😎', '🤠', '🥷', '👽', '🤖', '👻', '🦸', '🧙', '🧛', '🦹', '👨‍🚀', '🧑‍🎤', '👮', '🕵️', '💂', '🥷'];
+    let selectedSkin = '😎';
+    
+    // Player stats
+    let playerStats = {
+      totalWins: 0,
+      totalKills: 0,
+      gamesPlayed: 0
+    };
+
+    // Game state
+    let gameMode = 'solo';
+    let player = { x: 400, y: 300, health: 100, kills: 0, loot: 0, shield: false, speedBoost: false, rapidFire: false, team: 'blue' };
+    let enemies = [];
+    let bullets = [];
+    let lootItems = [];
+    let powerups = [];
+    let flags = [];
+    let keys = {};
+    let gameLoop;
+    let enemySpawnInterval;
+    let lootSpawnInterval;
+    let powerupSpawnInterval;
+    let zoneInterval;
+    let zone = { x: 400, y: 300, radius: 500 };
+    let playersAlive = 20;
+    let combo = 0;
+    let comboTimer = null;
+    let lastMovePos = { x: 0, y: 0 };
+    let bossEnemy = null;
+    let wave = 1;
+    let waveKills = 0;
+    let teamScores = { blue: 0, red: 0 };
+    let infectionTimer = 0;
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function initSkinSelector() {
+      const skinGrid = document.getElementById('skinGrid');
+      skinGrid.innerHTML = '';
+      
+      skins.forEach(skin => {
+        const skinOption = document.createElement('div');
+        skinOption.className = 'skin-option';
+        if (skin === selectedSkin) skinOption.classList.add('selected');
+        skinOption.textContent = skin;
+        skinOption.onclick = () => selectSkin(skin);
+        skinGrid.appendChild(skinOption);
+      });
+    }
+
+    function selectSkin(skin) {
+      selectedSkin = skin;
+      document.getElementById('skinPreview').textContent = skin;
+      document.querySelectorAll('.skin-option').forEach(el => {
+        el.classList.remove('selected');
+        if (el.textContent === skin) el.classList.add('selected');
+      });
+    }
+
+    function updateStatsDisplay() {
+      document.getElementById('totalWins').textContent = playerStats.totalWins;
+      document.getElementById('totalKills').textContent = playerStats.totalKills;
+      document.getElementById('gamesPlayed').textContent = playerStats.gamesPlayed;
+      const winRate = playerStats.gamesPlayed > 0 ? 
+        Math.round((playerStats.totalWins / playerStats.gamesPlayed) * 100) : 0;
+      document.getElementById('winRate').textContent = winRate + '%';
+    }
+
+    function startGame(mode) {
+      gameMode = mode;
+      showScreen('gameScreen');
+      initGame();
+      playerStats.gamesPlayed++;
+      updateStatsDisplay();
+    }
+
+    function backToMenu() {
+      showScreen('menuScreen');
+      stopGame();
+    }
+
+    function initGame() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      player = { 
+        x: rect.width / 2, 
+        y: rect.height / 2, 
+        health: 100, 
+        kills: 0, 
+        loot: 0,
+        shield: false,
+        speedBoost: false,
+        rapidFire: false
+      };
+      enemies = [];
+      bullets = [];
+      lootItems = [];
+      powerups = [];
+      bossEnemy = null;
+      wave = 1;
+      waveKills = 0;
+      
+      // Set players alive based on mode
+      if (gameMode === 'solo') playersAlive = 20;
+      else if (gameMode === 'survival') playersAlive = 50;
+      else if (gameMode === 'zombie') playersAlive = 100;
+      else if (gameMode === 'boss') playersAlive = 2;
+      else if (gameMode === 'sniper') playersAlive = 15;
+      else if (gameMode === 'deathmatch') playersAlive = 10;
+      else if (gameMode === 'capture') playersAlive = 8;
+      else if (gameMode === 'infection') playersAlive = 20;
+      else playersAlive = 15;
+      
+      // Reset team scores
+      teamScores = { blue: 0, red: 0 };
+      infectionTimer = 0;
+      
+      combo = 0;
+      lastMovePos = { x: player.x, y: player.y };
+      
+      zone = { 
+        x: rect.width / 2, 
+        y: rect.height / 2, 
+        radius: Math.min(rect.width, rect.height) * 0.45 
+      };
+
+      updateStats();
+      createPlayer();
+      
+      // Mode-specific initialization
+      if (gameMode === 'boss') {
+        spawnBoss();
+      } else if (gameMode === 'zombie') {
+        spawnZombieWave();
+      } else if (gameMode === 'capture') {
+        spawnFlags();
+        spawnInitialEnemies();
+      } else if (gameMode === 'infection') {
+        spawnInitialEnemies();
+        // Infect one random enemy after 5 seconds
+        setTimeout(() => {
+          if (enemies.length > 0) {
+            enemies[0].infected = true;
+          }
+        }, 5000);
+      } else {
+        spawnInitialEnemies();
+      }
+      
+      if (gameMode === 'loot') {
+        spawnInitialLoot();
+      }
+
+      gameLoop = setInterval(update, 1000 / 60);
+      
+      // Different spawn rates for different modes
+      if (gameMode === 'zombie') {
+        enemySpawnInterval = setInterval(spawnZombie, 1500);
+      } else if (gameMode !== 'boss' && gameMode !== 'sniper') {
+        const spawnRate = gameMode === 'survival' ? 2000 : 3000;
+        enemySpawnInterval = setInterval(spawnEnemy, spawnRate);
+      }
+      
+      if (gameMode === 'loot') {
+        lootSpawnInterval = setInterval(spawnLoot, 4000);
+      }
+      
+      if (gameMode !== 'sniper') {
+        powerupSpawnInterval = setInterval(spawnPowerup, 8000);
+      }
+      
+      if (gameMode !== 'boss') {
+        zoneInterval = setInterval(shrinkZone, 5000);
+      }
+
+      // Sniper mode setup
+      if (gameMode === 'sniper') {
+        gameArea.classList.add('sniper-mode');
+      } else {
+        gameArea.classList.remove('sniper-mode');
+      }
+
+      document.getElementById('gameOver').classList.remove('show');
+    }
+
+    function stopGame() {
+      clearInterval(gameLoop);
+      clearInterval(enemySpawnInterval);
+      clearInterval(lootSpawnInterval);
+      clearInterval(powerupSpawnInterval);
+      clearInterval(zoneInterval);
+      clearTimeout(comboTimer);
+      
+      document.querySelectorAll('.player, .enemy, .bullet, .loot, .powerup, .explosion, .combo-display, .damage-number, .shield-effect, .speed-trail').forEach(el => el.remove());
+    }
+
+    function createPlayer() {
+      const playerEl = document.createElement('div');
+      playerEl.className = 'player';
+      playerEl.id = 'player';
+      playerEl.textContent = selectedSkin;
+      playerEl.style.left = player.x + 'px';
+      playerEl.style.top = player.y + 'px';
+      
+      // Team color for team modes
+      if (gameMode === 'deathmatch' || gameMode === 'capture') {
+        playerEl.style.background = player.team === 'blue' ? '#2196F3' : '#f44336';
+        playerEl.style.borderColor = player.team === 'blue' ? '#1565C0' : '#c62828';
+      }
+      
+      document.getElementById('gameArea').appendChild(playerEl);
+    }
+
+    function spawnInitialEnemies() {
+      const count = gameMode === 'survival' ? 8 : 5;
+      for (let i = 0; i < count; i++) {
+        spawnEnemy();
+      }
+    }
+
+    function spawnEnemy() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      const edge = Math.floor(Math.random() * 4);
+      let x, y;
+      
+      switch(edge) {
+        case 0: x = Math.random() * rect.width; y = 0; break;
+        case 1: x = rect.width; y = Math.random() * rect.height; break;
+        case 2: x = Math.random() * rect.width; y = rect.height; break;
+        case 3: x = 0; y = Math.random() * rect.height; break;
+      }
+
+      const enemy = { 
+        x, 
+        y, 
+        health: 50, 
+        speed: 1 + Math.random(), 
+        type: 'normal',
+        team: (gameMode === 'deathmatch' || gameMode === 'capture') ? 'red' : null,
+        infected: false
+      };
+      enemies.push(enemy);
+
+      const enemyEl = document.createElement('div');
+      enemyEl.className = 'enemy';
+      enemyEl.textContent = '👾';
+      enemyEl.style.left = x + 'px';
+      enemyEl.style.top = y + 'px';
+      
+      // Team colors
+      if (enemy.team === 'red') {
+        enemyEl.style.background = '#f44336';
+        enemyEl.style.borderColor = '#c62828';
+      }
+      
+      gameArea.appendChild(enemyEl);
+    }
+
+    function spawnBoss() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      bossEnemy = { 
+        x: rect.width / 2, 
+        y: 100, 
+        health: 500, 
+        maxHealth: 500,
+        speed: 0.8, 
+        type: 'boss' 
+      };
+      enemies.push(bossEnemy);
+
+      const bossEl = document.createElement('div');
+      bossEl.className = 'enemy boss';
+      bossEl.textContent = '👹';
+      bossEl.style.left = bossEnemy.x + 'px';
+      bossEl.style.top = bossEnemy.y + 'px';
+      
+      const healthBar = document.createElement('div');
+      healthBar.className = 'health-bar';
+      const healthFill = document.createElement('div');
+      healthFill.className = 'health-bar-fill';
+      healthFill.style.width = '100%';
+      healthBar.appendChild(healthFill);
+      bossEl.appendChild(healthBar);
+      
+      gameArea.appendChild(bossEl);
+      
+      showWaveIndicator('BOSS BATTLE!');
+    }
+
+    function spawnZombie() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      const edge = Math.floor(Math.random() * 4);
+      let x, y;
+      
+      switch(edge) {
+        case 0: x = Math.random() * rect.width; y = 0; break;
+        case 1: x = rect.width; y = Math.random() * rect.height; break;
+        case 2: x = Math.random() * rect.width; y = rect.height; break;
+        case 3: x = 0; y = Math.random() * rect.height; break;
+      }
+
+      const enemy = { x, y, health: 30, speed: 0.7 + Math.random() * 0.5, type: 'zombie' };
+      enemies.push(enemy);
+
+      const enemyEl = document.createElement('div');
+      enemyEl.className = 'enemy zombie';
+      enemyEl.textContent = '🧟';
+      enemyEl.style.left = x + 'px';
+      enemyEl.style.top = y + 'px';
+      gameArea.appendChild(enemyEl);
+    }
+
+    function spawnZombieWave() {
+      const count = 5 + (wave * 2);
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => spawnZombie(), i * 200);
+      }
+      showWaveIndicator('WAVE ' + wave);
+    }
+
+    function showWaveIndicator(text) {
+      const existing = document.querySelector('.wave-indicator');
+      if (existing) existing.remove();
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'wave-indicator';
+      indicator.textContent = text;
+      document.getElementById('gameArea').appendChild(indicator);
+      setTimeout(() => indicator.remove(), 2000);
+    }
+
+    function spawnFlags() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      // Blue flag
+      const blueFlag = {
+        x: 100,
+        y: rect.height / 2,
+        team: 'blue',
+        captured: false
+      };
+      flags.push(blueFlag);
+      
+      const blueFlagEl = document.createElement('div');
+      blueFlagEl.className = 'loot';
+      blueFlagEl.textContent = '🚩';
+      blueFlagEl.style.left = blueFlag.x + 'px';
+      blueFlagEl.style.top = blueFlag.y + 'px';
+      blueFlagEl.style.background = '#2196F3';
+      gameArea.appendChild(blueFlagEl);
+      
+      // Red flag
+      const redFlag = {
+        x: rect.width - 100,
+        y: rect.height / 2,
+        team: 'red',
+        captured: false
+      };
+      flags.push(redFlag);
+      
+      const redFlagEl = document.createElement('div');
+      redFlagEl.className = 'loot';
+      redFlagEl.textContent = '🚩';
+      redFlagEl.style.left = redFlag.x + 'px';
+      redFlagEl.style.top = redFlag.y + 'px';
+      redFlagEl.style.background = '#f44336';
+      gameArea.appendChild(redFlagEl);
+    }
+
+    function spawnInitialLoot() {
+      for (let i = 0; i < 10; i++) {
+        spawnLoot();
+      }
+    }
+
+    function spawnLoot() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      const loot = {
+        x: Math.random() * (rect.width - 60) + 30,
+        y: Math.random() * (rect.height - 60) + 30,
+        value: Math.floor(Math.random() * 3) + 1
+      };
+      lootItems.push(loot);
+
+      const lootEl = document.createElement('div');
+      lootEl.className = 'loot';
+      lootEl.textContent = '💎';
+      lootEl.style.left = loot.x + 'px';
+      lootEl.style.top = loot.y + 'px';
+      gameArea.appendChild(lootEl);
+    }
+
+    function spawnPowerup() {
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+      
+      const types = ['shield', 'speed', 'rapid'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const icons = { shield: '🛡️', speed: '⚡', rapid: '🔥' };
+      
+      const powerup = {
+        x: Math.random() * (rect.width - 60) + 30,
+        y: Math.random() * (rect.height - 60) + 30,
+        type: type
+      };
+      powerups.push(powerup);
+
+      const powerupEl = document.createElement('div');
+      powerupEl.className = 'powerup';
+      powerupEl.textContent = icons[type];
+      powerupEl.style.left = powerup.x + 'px';
+      powerupEl.style.top = powerup.y + 'px';
+      gameArea.appendChild(powerupEl);
+    }
+
+    function update() {
+      movePlayer();
+      moveEnemies();
+      moveBullets();
+      checkCollisions();
+      checkZone();
+      updateElements();
+      updatePowerupEffects();
+      
+      // Infection mode timer
+      if (gameMode === 'infection') {
+        infectionTimer++;
+        
+        // Spread infection between enemies
+        enemies.forEach((enemy, i) => {
+          if (enemy.infected) {
+            enemies.forEach((other, j) => {
+              if (i !== j && !other.infected) {
+                const dx = enemy.x - other.x;
+                const dy = enemy.y - other.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 40) {
+                  other.infected = true;
+                }
+              }
+            });
+          }
+        });
+      }
+    }
+
+    function movePlayer() {
+      const speed = player.speedBoost ? 8 : 5;
+      const gameArea = document.getElementById('gameArea');
+      const rect = gameArea.getBoundingClientRect();
+
+      const oldX = player.x;
+      const oldY = player.y;
+
+      if (keys['w'] || keys['W']) player.y = Math.max(20, player.y - speed);
+      if (keys['s'] || keys['S']) player.y = Math.min(rect.height - 20, player.y + speed);
+      if (keys['a'] || keys['A']) player.x = Math.max(20, player.x - speed);
+      if (keys['d'] || keys['D']) player.x = Math.min(rect.width - 20, player.x + speed);
+
+      // Create speed trail effect
+      if (player.speedBoost && (oldX !== player.x || oldY !== player.y)) {
+        if (Math.random() < 0.3) {
+          createSpeedTrail(oldX, oldY);
+        }
+      }
+    }
+
+    function createSpeedTrail(x, y) {
+      const trail = document.createElement('div');
+      trail.className = 'speed-trail';
+      trail.style.left = x + 'px';
+      trail.style.top = y + 'px';
+      document.getElementById('gameArea').appendChild(trail);
+      setTimeout(() => trail.remove(), 500);
+    }
+
+    function moveEnemies() {
+      enemies.forEach(enemy => {
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+          enemy.x += (dx / dist) * enemy.speed;
+          enemy.y += (dy / dist) * enemy.speed;
+        }
+      });
+    }
+
+    function moveBullets() {
+      bullets = bullets.filter(bullet => {
+        bullet.x += bullet.vx;
+        bullet.y += bullet.vy;
+        
+        const gameArea = document.getElementById('gameArea');
+        const rect = gameArea.getBoundingClientRect();
+        
+        return bullet.x > 0 && bullet.x < rect.width && 
+               bullet.y > 0 && bullet.y < rect.height;
+      });
+    }
+
+    function checkCollisions() {
+      // Bullet-enemy collisions
+      bullets.forEach((bullet, bIndex) => {
+        enemies.forEach((enemy, eIndex) => {
+          const dx = bullet.x - enemy.x;
+          const dy = bullet.y - enemy.y;
+          const hitRadius = enemy.type === 'boss' ? 50 : 25;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < hitRadius) {
+            const damage = gameMode === 'sniper' ? 100 : 25;
+            enemy.health -= damage;
+            bullets.splice(bIndex, 1);
+            showDamageNumber(enemy.x, enemy.y, damage);
+            
+            if (enemy.health <= 0) {
+              createExplosion(enemy.x, enemy.y);
+              enemies.splice(eIndex, 1);
+              player.kills++;
+              playersAlive = Math.max(1, playersAlive - 1);
+              
+              // Zombie wave progression
+              if (gameMode === 'zombie') {
+                waveKills++;
+                const requiredKills = 5 + (wave * 2);
+                if (waveKills >= requiredKills) {
+                  wave++;
+                  waveKills = 0;
+                  setTimeout(() => spawnZombieWave(), 2000);
+                }
+              }
+              
+              // Boss defeated
+              if (enemy.type === 'boss') {
+                bossEnemy = null;
+                setTimeout(() => endGame(true), 1000);
+              }
+              
+              // Combo system
+              combo++;
+              clearTimeout(comboTimer);
+              comboTimer = setTimeout(() => { combo = 0; }, 2000);
+              
+              if (combo >= 3) {
+                showCombo(combo);
+              }
+              
+              updateStats();
+              
+              if (playersAlive === 1 && gameMode !== 'zombie' && gameMode !== 'boss') {
+                endGame(true);
+              }
+            }
+          }
+        });
+      });
+
+      // Player-enemy collisions
+      enemies.forEach(enemy => {
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 35) {
+          if (!player.shield) {
+            player.health -= 0.5;
+            updateStats();
+            
+            if (player.health <= 0) {
+              endGame(false);
+            }
+          }
+        }
+      });
+
+      // Player-loot collisions
+      lootItems = lootItems.filter(loot => {
+        const dx = player.x - loot.x;
+        const dy = player.y - loot.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 35) {
+          player.loot += loot.value;
+          updateStats();
+          return false;
+        }
+        return true;
+      });
+
+      // Player-flag collisions (Capture the Flag)
+      if (gameMode === 'capture') {
+        flags.forEach(flag => {
+          const dx = player.x - flag.x;
+          const dy = player.y - flag.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 40 && flag.team !== player.team && !flag.captured) {
+            flag.captured = true;
+            teamScores.blue++;
+            updateStats();
+            showWaveIndicator('FLAG CAPTURED! 🚩');
+            setTimeout(() => {
+              flag.captured = false;
+            }, 5000);
+          }
+        });
+      }
+
+      // Infection spread
+      if (gameMode === 'infection') {
+        enemies.forEach(enemy => {
+          if (enemy.infected) {
+            const dx = player.x - enemy.x;
+            const dy = player.y - enemy.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 40) {
+              endGame(false);
+            }
+          }
+        });
+      }
+
+      // Player-powerup collisions
+      powerups = powerups.filter(powerup => {
+        const dx = player.x - powerup.x;
+        const dy = player.y - powerup.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 35) {
+          activatePowerup(powerup.type);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function createExplosion(x, y) {
+      const explosion = document.createElement('div');
+      explosion.className = 'explosion';
+      explosion.textContent = '💥';
+      explosion.style.left = (x - 40) + 'px';
+      explosion.style.top = (y - 40) + 'px';
+      document.getElementById('gameArea').appendChild(explosion);
+      setTimeout(() => explosion.remove(), 500);
+    }
+
+    function showDamageNumber(x, y, damage) {
+      const dmg = document.createElement('div');
+      dmg.className = 'damage-number';
+      dmg.textContent = '-' + damage;
+      dmg.style.left = x + 'px';
+      dmg.style.top = y + 'px';
+      document.getElementById('gameArea').appendChild(dmg);
+      setTimeout(() => dmg.remove(), 1000);
+    }
+
+    function showCombo(comboCount) {
+      const existing = document.querySelector('.combo-display');
+      if (existing) existing.remove();
+      
+      const comboEl = document.createElement('div');
+      comboEl.className = 'combo-display';
+      comboEl.textContent = comboCount + 'x COMBO! 🔥';
+      document.getElementById('gameArea').appendChild(comboEl);
+      setTimeout(() => comboEl.remove(), 1000);
+    }
+
+    function activatePowerup(type) {
+      if (type === 'shield') {
+        player.shield = true;
+        setTimeout(() => { player.shield = false; }, 10000);
+      } else if (type === 'speed') {
+        player.speedBoost = true;
+        setTimeout(() => { player.speedBoost = false; }, 8000);
+      } else if (type === 'rapid') {
+        player.rapidFire = true;
+        setTimeout(() => { player.rapidFire = false; }, 7000);
+      }
+    }
+
+    function updatePowerupEffects() {
+      const playerEl = document.getElementById('player');
+      if (!playerEl) return;
+
+      // Update player visual effects
+      if (player.rapidFire) {
+        playerEl.classList.add('rapid-fire');
+      } else {
+        playerEl.classList.remove('rapid-fire');
+      }
+
+      // Shield effect
+      let shieldEl = document.querySelector('.shield-effect');
+      if (player.shield) {
+        if (!shieldEl) {
+          shieldEl = document.createElement('div');
+          shieldEl.className = 'shield-effect';
+          document.getElementById('gameArea').appendChild(shieldEl);
+        }
+        shieldEl.style.left = (player.x - 30) + 'px';
+        shieldEl.style.top = (player.y - 30) + 'px';
+      } else if (shieldEl) {
+        shieldEl.remove();
+      }
+    }
+
+    function checkZone() {
+      const dx = player.x - zone.x;
+      const dy = player.y - zone.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist > zone.radius) {
+        player.health -= 0.3;
+        updateStats();
+        
+        if (player.health <= 0) {
+          endGame(false);
+        }
+      }
+    }
+
+    function shrinkZone() {
+      zone.radius = Math.max(100, zone.radius * 0.85);
+      const zoneEl = document.getElementById('zone');
+      zoneEl.style.width = (zone.radius * 2) + 'px';
+      zoneEl.style.height = (zone.radius * 2) + 'px';
+      zoneEl.style.left = (zone.x - zone.radius) + 'px';
+      zoneEl.style.top = (zone.y - zone.radius) + 'px';
+    }
+
+    function updateElements() {
+      const playerEl = document.getElementById('player');
+      if (playerEl) {
+        playerEl.style.left = player.x + 'px';
+        playerEl.style.top = player.y + 'px';
+      }
+
+      const gameArea = document.getElementById('gameArea');
+      const existingEnemies = gameArea.querySelectorAll('.enemy');
+      existingEnemies.forEach((el, i) => {
+        if (enemies[i]) {
+          el.style.left = enemies[i].x + 'px';
+          el.style.top = enemies[i].y + 'px';
+          
+          // Update infected appearance
+          if (enemies[i].infected) {
+            el.style.background = '#9C27B0';
+            el.style.borderColor = '#6A1B9A';
+            el.textContent = '🦠';
+          }
+          
+          // Update boss health bar
+          if (enemies[i].type === 'boss') {
+            const healthFill = el.querySelector('.health-bar-fill');
+            if (healthFill) {
+              const healthPercent = (enemies[i].health / enemies[i].maxHealth) * 100;
+              healthFill.style.width = healthPercent + '%';
+            }
+          }
+        } else {
+          el.remove();
+        }
+      });
+
+      const existingBullets = gameArea.querySelectorAll('.bullet');
+      existingBullets.forEach(el => el.remove());
+      
+      bullets.forEach(bullet => {
+        const bulletEl = document.createElement('div');
+        bulletEl.className = 'bullet';
+        bulletEl.style.left = bullet.x + 'px';
+        bulletEl.style.top = bullet.y + 'px';
+        gameArea.appendChild(bulletEl);
+      });
+
+      const existingLoot = gameArea.querySelectorAll('.loot');
+      existingLoot.forEach((el, i) => {
+        if (!lootItems[i]) {
+          el.remove();
+        }
+      });
+
+      const existingPowerups = gameArea.querySelectorAll('.powerup');
+      existingPowerups.forEach((el, i) => {
+        if (!powerups[i]) {
+          el.remove();
+        }
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('health').textContent = Math.max(0, Math.floor(player.health));
+      document.getElementById('kills').textContent = player.kills;
+      document.getElementById('alive').textContent = playersAlive;
+      document.getElementById('loot').textContent = player.loot;
+    }
+
+    function endGame(won) {
+      stopGame();
+      
+      // Update player stats
+      if (won) {
+        playerStats.totalWins++;
+      }
+      playerStats.totalKills += player.kills;
+      updateStatsDisplay();
+      
+      const gameOver = document.getElementById('gameOver');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultStats = document.getElementById('resultStats');
+      
+      if (won) {
+        resultTitle.textContent = '🏆 Victory Royale! 🏆';
+        resultTitle.style.color = '#FFD700';
+      } else {
+        resultTitle.textContent = '💀 Eliminated! 💀';
+        resultTitle.style.color = '#ff4757';
+      }
+      
+      let statsText = `Eliminations: ${player.kills}<br>`;
+      
+      if (gameMode === 'loot') {
+        statsText += `Loot Collected: ${player.loot}<br>`;
+      }
+      
+      if (gameMode === 'zombie') {
+        statsText += `Waves Survived: ${wave}<br>`;
+      }
+      
+      if (gameMode === 'boss') {
+        statsText += won ? 'Boss Defeated! 🏆<br>' : 'Boss Remains...<br>';
+      }
+      
+      if (gameMode === 'deathmatch' || gameMode === 'capture') {
+        statsText += `Team Score: Blue ${teamScores.blue} - Red ${teamScores.red}<br>`;
+      }
+      
+      if (gameMode === 'infection') {
+        statsText += `Survival Time: ${Math.floor(infectionTimer / 60)}s<br>`;
+      }
+      
+      if (gameMode !== 'zombie' && gameMode !== 'boss' && gameMode !== 'deathmatch' && gameMode !== 'capture' && gameMode !== 'infection') {
+        statsText += `Final Placement: ${won ? '1st' : playersAlive + 'th'}`;
+      }
+      
+      resultStats.innerHTML = statsText;
+      
+      gameOver.classList.add('show');
+    }
+
+    function restartGame() {
+      initGame();
+    }
+
+    // Event listeners
+    document.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+    });
+
+    document.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    // Sniper scope tracking
+    document.getElementById('gameArea').addEventListener('mousemove', (e) => {
+      if (gameMode === 'sniper') {
+        const scope = document.getElementById('sniperScope');
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        scope.style.left = (mouseX - 75) + 'px';
+        scope.style.top = (mouseY - 75) + 'px';
+      }
+    });
+
+    let lastShot = 0;
+    document.getElementById('gameArea').addEventListener('click', (e) => {
+      const now = Date.now();
+      const fireRate = gameMode === 'sniper' ? 800 : (player.rapidFire ? 100 : 300);
+      
+      if (now - lastShot < fireRate) return;
+      lastShot = now;
+      
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      
+      const dx = clickX - player.x;
+      const dy = clickY - player.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      const speed = 10;
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: (dx / dist) * speed,
+        vy: (dy / dist) * speed
+      });
+
+      // Rapid fire shoots 2 extra bullets
+      if (player.rapidFire) {
+        const angle1 = Math.atan2(dy, dx) + 0.2;
+        const angle2 = Math.atan2(dy, dx) - 0.2;
+        
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle1) * speed,
+          vy: Math.sin(angle1) * speed
+        });
+        
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle2) * speed,
+          vy: Math.sin(angle2) * speed
+        });
+      }
+    });
+
+    // Element SDK integration
+    async function onConfigChange(newConfig) {
+      const gameTitle = document.getElementById('gameTitle');
+      const menuSubtitle = document.getElementById('menuSubtitle');
+      
+      gameTitle.textContent = newConfig.game_title || defaultConfig.game_title;
+      menuSubtitle.textContent = newConfig.menu_subtitle || defaultConfig.menu_subtitle;
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["menu_subtitle", config.menu_subtitle || defaultConfig.menu_subtitle]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // Initialize zone display
+    const zoneEl = document.getElementById('zone');
+    zoneEl.style.width = (zone.radius * 2) + 'px';
+    zoneEl.style.height = (zone.radius * 2) + 'px';
+    zoneEl.style.left = (zone.x - zone.radius) + 'px';
+    zoneEl.style.top = (zone.y - zone.radius) + 'px';
+
+    // Initialize skin selector and stats
+    initSkinSelector();
+    updateStatsDisplay();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba7fb4870e8ebb6',t:'MTc2NzgzNjM3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
